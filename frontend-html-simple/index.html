@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mathler Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .target {
+            text-align: center;
+            font-size: 1.2em;
+            color: #555;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .target span {
+            color: #667eea;
+            font-size: 1.5em;
+        }
+
+        .grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .cell.filled {
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .cell.correct {
+            background-color: #6aaa64;
+            border-color: #6aaa64;
+            color: white;
+            animation: flip 0.5s ease;
+        }
+
+        .cell.present {
+            background-color: #c9b458;
+            border-color: #c9b458;
+            color: white;
+            animation: flip 0.5s ease;
+        }
+
+        .cell.absent {
+            background-color: #787c7e;
+            border-color: #787c7e;
+            color: white;
+            animation: flip 0.5s ease;
+        }
+
+        @keyframes flip {
+            0% { transform: rotateX(0); }
+            50% { transform: rotateX(90deg); }
+            100% { transform: rotateX(0); }
+        }
+
+        .keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .keyboard-row {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .key {
+            min-width: 40px;
+            height: 50px;
+            background: #d3d6da;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 12px;
+        }
+
+        .key:hover {
+            background: #bbb;
+            transform: translateY(-2px);
+        }
+
+        .key:active {
+            transform: translateY(0);
+        }
+
+        .key.wide {
+            min-width: 65px;
+        }
+
+        .key.correct {
+            background-color: #6aaa64;
+            color: white;
+        }
+
+        .key.present {
+            background-color: #c9b458;
+            color: white;
+        }
+
+        .key.absent {
+            background-color: #787c7e;
+            color: white;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .message.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .api-config {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .api-config input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .api-config label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔢 Mathler</h1>
+        <div class="target">Trouver l'équation = <span id="targetNumber">100</span></div>
+        
+        <!-- <div class="api-config">
+            <label for="apiUrl">URL de l'API Backend:</label>
+            <input type="text" id="apiUrl" value="http://localhost:8080/api/check" placeholder="http://localhost:8080/api/check">
+        </div> -->
+
+        <div class="grid" id="grid"></div>
+
+        <div class="keyboard">
+            <div class="keyboard-row">
+                <button class="key" data-key="1">1</button>
+                <button class="key" data-key="2">2</button>
+                <button class="key" data-key="3">3</button>
+                <button class="key" data-key="4">4</button>
+                <button class="key" data-key="5">5</button>
+                <button class="key" data-key="6">6</button>
+                <button class="key" data-key="7">7</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="key" data-key="8">8</button>
+                <button class="key" data-key="9">9</button>
+                <button class="key" data-key="0">0</button>
+                <button class="key" data-key="+">+</button>
+                <button class="key" data-key="-">-</button>
+                <button class="key" data-key="*">×</button>
+                <button class="key" data-key="/">/</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="key wide" data-key="Enter">VALIDER</button>
+                <button class="key wide" data-key="Backspace">⌫</button>
+            </div>
+        </div>
+
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+        class MathlerGame {
+            constructor() {
+                this.maxAttempts = 6;
+                this.equationLength = 8;
+                this.currentAttempt = 0;
+                this.currentGuess = [];
+                this.grid = document.getElementById('grid');
+                this.messageEl = document.getElementById('message');
+                this.targetNumber = 100;
+                this.gameOver = false;
+                this.keyStates = {}; // Pour stocker l'état des touches
+                
+                this.initGrid();
+                this.attachEventListeners();
+            }
+
+            initGrid() {
+                this.grid.innerHTML = '';
+                for (let i = 0; i < this.maxAttempts; i++) {
+                    const row = document.createElement('div');
+                    row.className = 'row';
+                    row.dataset.row = i;
+                    
+                    for (let j = 0; j < this.equationLength; j++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.dataset.col = j;
+                        row.appendChild(cell);
+                    }
+                    
+                    this.grid.appendChild(row);
+                }
+            }
+
+            attachEventListeners() {
+                // Clavier virtuel
+                document.querySelectorAll('.key').forEach(key => {
+                    key.addEventListener('click', () => {
+                        this.handleKey(key.dataset.key);
+                    });
+                });
+
+                // Clavier physique
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        this.handleKey('Enter');
+                    } else if (e.key === 'Backspace') {
+                        this.handleKey('Backspace');
+                    } else if (/^[0-9+\-*/]$/.test(e.key)) {
+                        this.handleKey(e.key);
+                    }
+                });
+            }
+
+            handleKey(key) {
+                if (this.gameOver) return;
+
+                if (key === 'Enter') {
+                    this.submitGuess();
+                } else if (key === 'Backspace') {
+                    this.deleteLast();
+                } else if (this.currentGuess.length < this.equationLength) {
+                    this.addCharacter(key);
+                }
+            }
+
+            addCharacter(char) {
+                if (this.currentGuess.length < this.equationLength) {
+                    this.currentGuess.push(char);
+                    this.updateDisplay();
+                }
+            }
+
+            deleteLast() {
+                this.currentGuess.pop();
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                const row = this.grid.querySelector(`[data-row="${this.currentAttempt}"]`);
+                const cells = row.querySelectorAll('.cell');
+                
+                cells.forEach((cell, index) => {
+                    if (index < this.currentGuess.length) {
+                        cell.textContent = this.currentGuess[index];
+                        cell.classList.add('filled');
+                    } else {
+                        cell.textContent = '';
+                        cell.classList.remove('filled');
+                    }
+                });
+            }
+
+            async submitGuess() {
+                if (this.currentGuess.length !== this.equationLength) {
+                    this.showMessage('L\'équation doit contenir ' + this.equationLength + ' caractères!', 'error');
+                    return;
+                }
+
+                try {
+                    const apiUrl = 'http://localhost:8080/api/check'; //document.getElementById('apiUrl').value;
+                    
+                    // Appel à l'API backend
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            guess: this.currentGuess,
+                            targetValue: this.targetNumber
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Erreur API: ' + response.status);
+                    }
+
+                    const result = await response.json();
+                    
+                    // result devrait avoir la structure:
+                    // { states: ['CORRECT', 'PRESENT', 'ABSENT', ...], valid: true, solved: false }
+                    
+                    if (!result.valid) {
+                        this.showMessage('Équation invalide! Elle doit être calculable et égale à ' + this.targetNumber, 'error');
+                        return;
+                    }
+
+                    this.applyResult(result.states);
+                    
+                    if (result.solved) {
+                        this.gameOver = true;
+                        this.showMessage('🎉 Bravo! Vous avez trouvé l\'équation!', 'success');
+                    } else if (this.currentAttempt === this.maxAttempts - 1) {
+                        this.gameOver = true;
+                        this.showMessage('😔 Perdu! Plus de tentatives disponibles.', 'error');
+                    } else {
+                        this.currentAttempt++;
+                        this.currentGuess = [];
+                    }
+
+                } catch (error) {
+                    console.error('Erreur:', error);
+                    // Mode démo si l'API n'est pas disponible
+                    this.showMessage('⚠️ API non disponible. Mode démo activé.', 'info');
+                    this.demoMode();
+                }
+            }
+
+            applyResult(states) {
+                const row = this.grid.querySelector(`[data-row="${this.currentAttempt}"]`);
+                const cells = row.querySelectorAll('.cell');
+                
+                states.forEach((state, index) => {
+                    const cell = cells[index];
+                    const char = this.currentGuess[index];
+                    
+                    // Attendre un peu pour l'animation
+                    setTimeout(() => {
+                        if (state === 'CORRECT') {
+                            cell.classList.add('correct');
+                            this.updateKeyState(char, 'correct');
+                        } else if (state === 'PRESENT') {
+                            cell.classList.add('present');
+                            this.updateKeyState(char, 'present');
+                        } else {
+                            cell.classList.add('absent');
+                            this.updateKeyState(char, 'absent');
+                        }
+                    }, index * 100);
+                });
+            }
+
+            updateKeyState(char, state) {
+                const key = document.querySelector(`[data-key="${char}"]`);
+                if (key) {
+                    // Priorité: correct > present > absent
+                    if (state === 'correct') {
+                        key.classList.remove('present', 'absent');
+                        key.classList.add('correct');
+                        this.keyStates[char] = 'correct';
+                    } else if (state === 'present' && this.keyStates[char] !== 'correct') {
+                        key.classList.remove('absent');
+                        key.classList.add('present');
+                        this.keyStates[char] = 'present';
+                    } else if (state === 'absent' && !this.keyStates[char]) {
+                        key.classList.add('absent');
+                        this.keyStates[char] = 'absent';
+                    }
+                }
+            }
+
+            demoMode() {
+                // Mode démo avec génération aléatoire de résultats
+                const states = this.currentGuess.map(() => {
+                    const rand = Math.random();
+                    if (rand < 0.3) return 'CORRECT';
+                    if (rand < 0.6) return 'PRESENT';
+                    return 'ABSENT';
+                });
+
+                const allCorrect = states.every(s => s === 'CORRECT');
+                
+                this.applyResult(states);
+                
+                if (allCorrect) {
+                    this.gameOver = true;
+                    this.showMessage('🎉 Bravo! (Mode démo)', 'success');
+                } else if (this.currentAttempt === this.maxAttempts - 1) {
+                    this.gameOver = true;
+                    this.showMessage('😔 Perdu! (Mode démo)', 'error');
+                } else {
+                    this.currentAttempt++;
+                    this.currentGuess = [];
+                }
+            }
+
+            showMessage(text, type) {
+                this.messageEl.textContent = text;
+                this.messageEl.className = `message show ${type}`;
+                
+                setTimeout(() => {
+                    this.messageEl.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        // Initialisation du jeu
+        const game = new MathlerGame();
+    </script>
+</body>
+</html>
