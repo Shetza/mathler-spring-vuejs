@@ -1,0 +1,11 @@
+fr/cnalps/squaregames/Puzzle.class
+fr/cnalps/squaregames/PuzzleProperties.class
+fr/cnalps/squaregames/MathlerApplication.class
+fr/cnalps/squaregames/MathlerController.class
+fr/cnalps/squaregames/GuessResponse.class
+fr/cnalps/squaregames/CorsConfig.class
+fr/cnalps/squaregames/MathlerService.class
+fr/cnalps/squaregames/GameState.class
+fr/cnalps/squaregames/PuzzleProperties$Equation.class
+fr/cnalps/squaregames/GuessRequest.class
+fr/cnalps/squaregames/PuzzleResponse.class
